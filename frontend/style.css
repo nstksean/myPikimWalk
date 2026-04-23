@@ -33,7 +33,29 @@ body {
   border-left: 1px solid #0f3460;
 }
 
+#title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 h1 { font-size: 16px; font-weight: 700; color: #4ade80; }
+
+#tile-switcher { display: flex; gap: 4px; }
+
+.tile-btn {
+  width: 28px; height: 28px;
+  background: #0f3460;
+  border: 1px solid #1e4080;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.15s;
+}
+
+.tile-btn.active, .tile-btn:hover {
+  background: #4ade80;
+}
 
 #status-bar {
   background: #0f3460;
@@ -214,38 +236,48 @@ input[type=number], input[type=text] {
   font-size: 12px;
 }
 
-/* D-pad */
-#dpad {
+/* Circle joystick */
+#joystick-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
   padding: 8px 0;
 }
 
-.dpad-row {
-  display: flex;
-  gap: 4px;
-}
-
-.dpad-btn {
-  width: 44px; height: 44px;
-  background: #1e4080;
-  border: 1px solid #2a5090;
-  color: #e0e0e0;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
+#joystick-base {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: #0f3460;
+  border: 2px solid #1e4080;
+  position: relative;
+  touch-action: none;
   user-select: none;
-  transition: background 0.1s;
+  cursor: grab;
 }
 
-.dpad-btn:active, .dpad-btn.pressed {
+#joystick-base:active { cursor: grabbing; }
+
+#joystick-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
   background: #4ade80;
-  color: #0a0a1a;
+  border: 3px solid #fff;
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: background 0.1s;
+  box-shadow: 0 0 10px rgba(74,222,128,0.5);
 }
 
-.dpad-center { cursor: default; }
+#joystick-base.active #joystick-thumb {
+  background: #22c55e;
+}
+
+/* Speed warning */
+.speed-warn { color: #f59e0b !important; margin-top: 2px; }
 
 /* Details / summary */
 details {

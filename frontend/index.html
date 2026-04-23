@@ -14,7 +14,14 @@
 
     <!-- ── Control Panel ────────────────────────── -->
     <aside id="panel">
-      <h1>🌱 myPikminGps</h1>
+      <div id="title-row">
+        <h1>🌱 myPikminGps</h1>
+        <div id="tile-switcher">
+          <button class="tile-btn active" data-tile="dark">🌑</button>
+          <button class="tile-btn" data-tile="voyager">🗺</button>
+          <button class="tile-btn" data-tile="sat">🛰</button>
+        </div>
+      </div>
 
       <!-- Status bar -->
       <div id="status-bar">
@@ -28,7 +35,8 @@
         <label for="speed-input">速度
           <span id="speed-label">3.5 km/h</span>
         </label>
-        <input id="speed-input" type="range" min="0.5" max="5" step="0.1" value="3.5" />
+        <input id="speed-input" type="range" min="0.5" max="10" step="0.1" value="3.5" />
+        <p id="speed-warning" class="hint speed-warn" style="display:none">⚠️ 超過 5 km/h 可能不計步</p>
       </section>
 
       <!-- Mode tabs -->
@@ -41,6 +49,7 @@
       <!-- Navigate panel -->
       <div id="panel-navigate" class="mode-panel active">
         <p class="hint">在地圖上點擊目的地，或直接輸入座標</p>
+        <button id="btn-locate" class="btn-secondary">📍 定位我的位置</button>
         <div class="row">
           <input id="nav-lat" type="number" step="any" placeholder="緯度" />
           <input id="nav-lng" type="number" step="any" placeholder="經度" />
@@ -67,16 +76,14 @@
 
       <!-- Joystick panel -->
       <div id="panel-joystick" class="mode-panel">
-        <p class="hint">按下「啟動搖桿」後，用 WASD 或方向鍵移動</p>
+        <p class="hint">拖曳下方搖桿移動，放開即停止</p>
         <button id="btn-joystick-start" class="btn-primary">啟動搖桿</button>
-        <div id="dpad">
-          <button class="dpad-btn" data-key="ArrowUp">▲</button>
-          <div class="dpad-row">
-            <button class="dpad-btn" data-key="ArrowLeft">◀</button>
-            <button class="dpad-btn dpad-center" data-key="">·</button>
-            <button class="dpad-btn" data-key="ArrowRight">▶</button>
+        <!-- Circle joystick -->
+        <div id="joystick-wrapper">
+          <div id="joystick-base">
+            <div id="joystick-thumb"></div>
           </div>
-          <button class="dpad-btn" data-key="ArrowDown">▼</button>
+          <p class="hint" style="text-align:center;margin-top:6px">也可用 WASD / 方向鍵</p>
         </div>
       </div>
 

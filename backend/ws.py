@@ -19,6 +19,7 @@ class WSHub:
     def __init__(self) -> None:
         self._clients: set[WebSocket] = set()
         self._joystick_keys: set[str] = set()
+        self._joystick_vector: tuple[float, float] = (0.0, 0.0)
         self._joystick_lock = asyncio.Lock()
 
     async def connect(self, ws: WebSocket) -> None:
@@ -39,14 +40,17 @@ class WSHub:
         self._clients -= dead
 
     async def handle_incoming(self, ws: WebSocket) -> None:
-        """Read messages from a single connected client (joystick key events)."""
+        """Read messages from a single connected client (joystick key/vector events)."""
         try:
             async for text in ws.iter_text():
                 try:
                     msg = json.loads(text)
-                    if msg.get("type") == "keys":
-                        async with self._joystick_lock:
+                    t = msg.get("type")
+                    async with self._joystick_lock:
+                        if t == "keys":
                             self._joystick_keys = set(k.lower() for k in msg.get("keys", []))
+                        elif t == "vector":
+                            self._joystick_vector = (float(msg.get("vx", 0)), float(msg.get("vy", 0)))
                 except json.JSONDecodeError:
                     pass
         except Exception:
@@ -55,6 +59,10 @@ class WSHub:
     async def get_held_keys(self) -> set[str]:
         async with self._joystick_lock:
             return set(self._joystick_keys)
+
+    async def get_vector(self) -> tuple[float, float]:
+        async with self._joystick_lock:
+            return self._joystick_vector
 
 
 hub = WSHub()

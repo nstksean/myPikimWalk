@@ -14,8 +14,8 @@ from collections.abc import AsyncGenerator
 _R = 6_371_000.0
 
 # Pikmin Bloom anti-detection limits
-MAX_SPEED_MPS = 5.0 / 3.6     # 5 km/h hard cap
-DEFAULT_SPEED_MPS = 3.5 / 3.6 # 3.5 km/h default
+MAX_SPEED_MPS = 10.0 / 3.6    # 10 km/h hard cap (>5 km/h won't count as steps in Pikmin Bloom)
+DEFAULT_SPEED_MPS = 3.5 / 3.6 # 3.5 km/h default (safe for step counting)
 JITTER_FRACTION = 0.10         # ±10 % speed jitter
 ARRIVAL_RADIUS_M = 3.0         # stop when within this distance of waypoint
 

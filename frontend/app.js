@@ -5,19 +5,62 @@
 import { initJoystick } from '/static/joystick.js';
 import { initWaypointPanel } from '/static/panel.js';
 
-// ── Map setup ────────────────────────────────────────────────────────────────
-const map = L.map('map').setView([25.0330, 121.5654], 15);
+// ── Map tiles ────────────────────────────────────────────────────────────────
+const TILE_STYLES = {
+  dark:    { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+             attr: '© OpenStreetMap © CARTO', label: '🌑 深色' },
+  voyager: { url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+             attr: '© OpenStreetMap © CARTO', label: '🗺 彩色' },
+  sat:     { url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+             attr: '© Esri', label: '🛰 衛星' },
+};
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© OpenStreetMap contributors',
-  maxZoom: 19,
+const map = L.map('map').setView([25.0330, 121.5654], 15);
+let currentTileLayer = L.tileLayer(TILE_STYLES.dark.url, {
+  attribution: TILE_STYLES.dark.attr, maxZoom: 19,
 }).addTo(map);
 
-// Current position marker
+function switchTile(key) {
+  const style = TILE_STYLES[key];
+  if (!style) return;
+  map.removeLayer(currentTileLayer);
+  currentTileLayer = L.tileLayer(style.url, { attribution: style.attr, maxZoom: 19 }).addTo(map);
+}
+
+// ── Pikmin position marker ───────────────────────────────────────────────────
+const PIKMIN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="48" viewBox="0 0 36 48">
+  <!-- shadow -->
+  <ellipse cx="18" cy="46" rx="9" ry="3" fill="rgba(0,0,0,0.3)"/>
+  <!-- stem -->
+  <rect x="17" y="6" width="2" height="9" rx="1" fill="#3a6e1a"/>
+  <!-- leaf -->
+  <ellipse cx="18" cy="5" rx="7" ry="4" fill="#4a9e22" transform="rotate(-20 18 5)"/>
+  <ellipse cx="19" cy="4" rx="6" ry="3" fill="#66cc2e" transform="rotate(-20 18 5)"/>
+  <!-- body -->
+  <ellipse cx="18" cy="35" rx="11" ry="10" fill="#f9d74c"/>
+  <ellipse cx="18" cy="33" rx="8" ry="6" fill="#fce97a"/>
+  <!-- head -->
+  <circle cx="18" cy="19" r="10" fill="#f9d74c"/>
+  <circle cx="18" cy="18" r="7.5" fill="#fce97a"/>
+  <!-- eyes white -->
+  <circle cx="14.5" cy="17" r="3" fill="white"/>
+  <circle cx="21.5" cy="17" r="3" fill="white"/>
+  <!-- pupils -->
+  <circle cx="15" cy="17.5" r="1.5" fill="#1a1a2e"/>
+  <circle cx="22" cy="17.5" r="1.5" fill="#1a1a2e"/>
+  <!-- eye shine -->
+  <circle cx="15.5" cy="17" r="0.5" fill="white"/>
+  <circle cx="22.5" cy="17" r="0.5" fill="white"/>
+  <!-- feet -->
+  <ellipse cx="14" cy="44" rx="4" ry="2.5" fill="#e8b820"/>
+  <ellipse cx="22" cy="44" rx="4" ry="2.5" fill="#e8b820"/>
+</svg>`;
+
 const posIcon = L.divIcon({
   className: '',
-  html: '<div style="width:14px;height:14px;background:#4ade80;border:2px solid #fff;border-radius:50%;box-shadow:0 0 6px #4ade80"></div>',
-  iconAnchor: [7, 7],
+  html: PIKMIN_SVG,
+  iconSize:   [36, 48],
+  iconAnchor: [18, 46],
 });
 
 let posMarker = null;
@@ -35,9 +78,12 @@ let currentSpeed = 3.5;
 const speedInput = document.getElementById('speed-input');
 const speedLabel = document.getElementById('speed-label');
 
+const speedWarning = document.getElementById('speed-warning');
+
 speedInput.addEventListener('input', () => {
   currentSpeed = parseFloat(speedInput.value);
   speedLabel.textContent = `${currentSpeed.toFixed(1)} km/h`;
+  speedWarning.style.display = currentSpeed > 5 ? 'block' : 'none';
   api('POST', '/api/speed', { speed_kmh: currentSpeed });
 });
 
@@ -58,6 +104,22 @@ document.getElementById('btn-navigate').addEventListener('click', async () => {
   const lng = parseFloat(document.getElementById('nav-lng').value);
   if (isNaN(lat) || isNaN(lng)) return alert('請輸入有效的座標');
   await startNavigate(lat, lng);
+});
+
+document.getElementById('btn-locate').addEventListener('click', () => {
+  if (!navigator.geolocation) return alert('瀏覽器不支援定位');
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude: lat, longitude: lng } = pos.coords;
+      document.getElementById('nav-lat').value = lat.toFixed(6);
+      document.getElementById('nav-lng').value = lng.toFixed(6);
+      map.setView([lat, lng], 17);
+      // Also set as simulation starting point (teleport silently)
+      api('POST', '/api/teleport', { lat, lng });
+    },
+    () => alert('無法取得位置，請確認瀏覽器已允許定位權限'),
+    { enableHighAccuracy: true, timeout: 8000 }
+  );
 });
 
 async function startNavigate(lat, lng) {
@@ -112,6 +174,15 @@ document.getElementById('btn-teleport').addEventListener('click', async () => {
   const lng = parseFloat(document.getElementById('tp-lng').value);
   if (isNaN(lat) || isNaN(lng)) return alert('請輸入有效的座標');
   await api('POST', '/api/teleport', { lat, lng });
+});
+
+// ── Map style switcher ────────────────────────────────────────────────────────
+document.querySelectorAll('.tile-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    switchTile(btn.dataset.tile);
+    document.querySelectorAll('.tile-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
 });
 
 // ── Connect ───────────────────────────────────────────────────────────────────

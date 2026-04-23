@@ -54,3 +54,28 @@ def compute_delta(
     delta_lng = math.degrees(step_m * dx / (_R * cos_lat)) if cos_lat > 1e-9 else 0.0
 
     return (delta_lat, delta_lng)
+
+
+def compute_delta_vector(
+    vx: float,
+    vy: float,
+    lat: float,
+    speed_mps: float,
+    tick_s: float = 1.0,
+) -> tuple[float, float]:
+    """
+    Return (Δlat, Δlng) from a continuous joystick vector (vx, vy) in [-1, 1].
+    vy > 0 = north, vx > 0 = east. Magnitude scales speed proportionally.
+    """
+    speed_mps = min(speed_mps, MAX_SPEED_MPS)
+    magnitude = math.sqrt(vx ** 2 + vy ** 2)
+    if magnitude < 0.05:
+        return (0.0, 0.0)
+
+    magnitude = min(magnitude, 1.0)
+    step_m = speed_mps * tick_s * magnitude
+    delta_lat = math.degrees(step_m * vy / _R)
+    cos_lat = math.cos(math.radians(lat))
+    delta_lng = math.degrees(step_m * vx / (_R * cos_lat)) if cos_lat > 1e-9 else 0.0
+
+    return (delta_lat, delta_lng)

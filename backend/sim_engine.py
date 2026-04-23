@@ -13,7 +13,7 @@ import logging
 from enum import Enum
 
 from backend.device import DeviceSession
-from backend.joystick import compute_delta
+from backend.joystick import compute_delta, compute_delta_vector
 from backend.osrm import get_walking_route
 from backend.walker import DEFAULT_SPEED_MPS, walk_polyline
 from backend.waypoints import Waypoint, build_full_polyline
@@ -130,10 +130,15 @@ class SimulationEngine:
         try:
             while True:
                 await asyncio.sleep(TICK_S)
-                keys = await self._hub.get_held_keys()
-                if not keys:
-                    continue
-                dlat, dlng = compute_delta(keys, self._lat, self._speed_mps, TICK_S)
+                # Prefer continuous vector (circle joystick) over discrete keys
+                vx, vy = await self._hub.get_vector()
+                if abs(vx) > 0.05 or abs(vy) > 0.05:
+                    dlat, dlng = compute_delta_vector(vx, vy, self._lat, self._speed_mps, TICK_S)
+                else:
+                    keys = await self._hub.get_held_keys()
+                    if not keys:
+                        continue
+                    dlat, dlng = compute_delta(keys, self._lat, self._speed_mps, TICK_S)
                 self._lat += dlat
                 self._lng += dlng
                 await self._push_position()
