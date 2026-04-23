@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from backend.device import DeviceNotConnectedError, DeviceSession
 from backend.sim_engine import SimulationEngine
-from backend.walker import MAX_SPEED_MPS
+from backend.walker import MAX_SPEED_MPS, STRIDE_LENGTH_M
 from backend.waypoints import Waypoint
 from backend.ws import WSHub, hub
 
@@ -88,6 +88,13 @@ class SpeedRequest(BaseModel):
     speed_kmh: float = Field(ge=0.5, le=MAX_SPEED_KMH)
 
 
+class StepRateResponse(BaseModel):
+    speed_kmh: float
+    steps_per_minute: int
+    stride_length_m: float
+    active: bool
+
+
 # ── helpers ──────────────────────────────────────────────────────────────────
 
 def _engine_or_503() -> SimulationEngine:
@@ -119,6 +126,20 @@ async def index():
 async def status():
     eng = _engine_or_503()
     return {**eng.state(), **_device.device_info()}
+
+
+@app.get("/api/step-rate", response_model=StepRateResponse)
+async def step_rate():
+    eng = _engine_or_503()
+    state = eng.state()
+    is_active = state["mode"] != "idle"
+    steps = round(state["speed_kmh"] * 1000 / 60 / STRIDE_LENGTH_M) if is_active else 0
+    return StepRateResponse(
+        speed_kmh=state["speed_kmh"],
+        steps_per_minute=steps,
+        stride_length_m=STRIDE_LENGTH_M,
+        active=is_active,
+    )
 
 
 @app.post("/api/connect")

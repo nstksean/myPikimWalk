@@ -6,7 +6,7 @@
 
 import { api } from '/static/app.js';
 
-export function initWaypointPanel(map, defaultSpeed) {
+export function initWaypointPanel(map, defaultSpeed, onCountChange) {
   const listEl = document.getElementById('waypoint-list');
   const startBtn = document.getElementById('btn-route-start');
   const clearBtn = document.getElementById('btn-route-clear');
@@ -26,6 +26,7 @@ export function initWaypointPanel(map, defaultSpeed) {
     waypoints.push({ lat, lng, dwell_s: dwell, marker });
     renderList();
     drawPreview();
+    onCountChange?.(waypoints.length);
   }
 
   function removeWaypoint(idx) {
@@ -39,6 +40,7 @@ export function initWaypointPanel(map, defaultSpeed) {
     });
     renderList();
     drawPreview();
+    onCountChange?.(waypoints.length);
   }
 
   function renderList() {
@@ -77,6 +79,7 @@ export function initWaypointPanel(map, defaultSpeed) {
     waypoints = [];
     if (routePreviewLine) { routePreviewLine.remove(); routePreviewLine = null; }
     renderList();
+    onCountChange?.(0);
   }
 
   startBtn.addEventListener('click', async () => {

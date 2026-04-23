@@ -146,6 +146,32 @@ Base URL: `http://127.0.0.1:8000`
 
 ---
 
+### `GET /api/step-rate`
+
+取得目前速度對應的 HealthKit 步率，供 iPhone Shortcut 使用。
+
+**回應**
+```json
+{
+  "speed_kmh": 3.5,
+  "steps_per_minute": 74,
+  "stride_length_m": 0.78,
+  "active": true
+}
+```
+
+| 欄位 | 說明 |
+|---|---|
+| `speed_kmh` | 目前速度設定 |
+| `steps_per_minute` | 建議每分鐘寫入 HealthKit 的步數（mode=idle 時為 0）|
+| `stride_length_m` | 計算用步幅（0.78 m，固定值）|
+| `active` | `true` 表示目前有移動模式在跑，Shortcut 應寫入步數 |
+
+> iPhone Shortcut 每 60 秒輪詢此 endpoint，讀取 `steps_per_minute` 後寫入 Apple Health。
+> 詳見 [HEALTHKIT_STEPS.md](HEALTHKIT_STEPS.md)。
+
+---
+
 ### `POST /api/speed`
 
 即時更新移動速度（在任何模式下都可以呼叫）。

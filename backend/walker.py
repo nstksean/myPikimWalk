@@ -18,6 +18,7 @@ MAX_SPEED_MPS = 10.0 / 3.6    # 10 km/h hard cap (>5 km/h won't count as steps i
 DEFAULT_SPEED_MPS = 3.5 / 3.6 # 3.5 km/h default (safe for step counting)
 JITTER_FRACTION = 0.10         # ±10 % speed jitter
 ARRIVAL_RADIUS_M = 3.0         # stop when within this distance of waypoint
+STRIDE_LENGTH_M: float = 0.78  # average adult walking stride for step-rate calculation
 
 
 def haversine(lat1: float, lng1: float, lat2: float, lng2: float) -> float:

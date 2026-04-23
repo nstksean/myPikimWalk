@@ -73,11 +73,44 @@ let destMarker = null;
 // ── State ────────────────────────────────────────────────────────────────────
 let currentMode = 'navigate';
 let currentSpeed = 3.5;
+let isConnected = false;
+let serverMode = 'idle';
+let waypointCount = 0;
+
+// ── UI State ─────────────────────────────────────────────────────────────────
+function updateUIState() {
+  const isIdle = serverMode === 'idle';
+
+  // Buttons requiring a connected device
+  for (const id of ['btn-navigate', 'btn-teleport']) {
+    const btn = document.getElementById(id);
+    btn.disabled = !isConnected;
+    btn.title = isConnected ? '' : '裝置未連線';
+  }
+
+  // Route start: device + ≥ 2 waypoints
+  const routeBtn = document.getElementById('btn-route-start');
+  routeBtn.disabled = !isConnected || waypointCount < 2;
+  routeBtn.title = !isConnected ? '裝置未連線' : waypointCount < 2 ? '至少需要兩個停留點' : '';
+
+  // Joystick start / stop toggle
+  const jsBtn = document.getElementById('btn-joystick-start');
+  jsBtn.disabled = !isConnected && serverMode !== 'joystick';
+  jsBtn.title = isConnected ? '' : '裝置未連線';
+  jsBtn.textContent = serverMode === 'joystick' ? '停止搖桿' : '啟動搖桿';
+
+  // Stop: only meaningful when something is running
+  document.getElementById('btn-stop').disabled = isIdle;
+
+  // Tab running indicator (green dot on active mode tab)
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('running', !isIdle && t.dataset.mode === serverMode);
+  });
+}
 
 // ── Speed control ────────────────────────────────────────────────────────────
 const speedInput = document.getElementById('speed-input');
 const speedLabel = document.getElementById('speed-label');
-
 const speedWarning = document.getElementById('speed-warning');
 
 speedInput.addEventListener('input', () => {
@@ -114,7 +147,6 @@ document.getElementById('btn-locate').addEventListener('click', () => {
       document.getElementById('nav-lat').value = lat.toFixed(6);
       document.getElementById('nav-lng').value = lng.toFixed(6);
       map.setView([lat, lng], 17);
-      // Also set as simulation starting point (teleport silently)
       api('POST', '/api/teleport', { lat, lng });
     },
     () => alert('無法取得位置，請確認瀏覽器已允許定位權限'),
@@ -124,7 +156,8 @@ document.getElementById('btn-locate').addEventListener('click', () => {
 
 async function startNavigate(lat, lng) {
   setDestMarker(lat, lng);
-  await api('POST', '/api/navigate', { lat, lng, speed_kmh: currentSpeed });
+  const res = await api('POST', '/api/navigate', { lat, lng, speed_kmh: currentSpeed });
+  if (res?.ok) { serverMode = 'navigate'; updateUIState(); }
 }
 
 function setDestMarker(lat, lng) {
@@ -143,7 +176,6 @@ map.on('click', async (e) => {
   const { lat, lng } = e.latlng;
 
   if (e.originalEvent.shiftKey) {
-    // Shift+click → add waypoint
     waypointPanel.addWaypoint(lat, lng);
     return;
   }
@@ -157,15 +189,28 @@ map.on('click', async (e) => {
 
 // ── Joystick panel ───────────────────────────────────────────────────────────
 document.getElementById('btn-joystick-start').addEventListener('click', async () => {
-  await api('POST', '/api/joystick/start', { speed_kmh: currentSpeed });
+  if (serverMode === 'joystick') {
+    const res = await api('POST', '/api/stop');
+    if (res?.ok) {
+      serverMode = 'idle';
+      trailCoords = [];
+      trailPolyline.setLatLngs([]);
+      updateUIState();
+    }
+  } else {
+    const res = await api('POST', '/api/joystick/start', { speed_kmh: currentSpeed });
+    if (res?.ok) { serverMode = 'joystick'; updateUIState(); }
+  }
 });
 
 // ── Stop button ──────────────────────────────────────────────────────────────
 document.getElementById('btn-stop').addEventListener('click', async () => {
   await api('POST', '/api/stop');
+  serverMode = 'idle';
   trailCoords = [];
   trailPolyline.setLatLngs([]);
   if (destMarker) { destMarker.remove(); destMarker = null; }
+  updateUIState();
 });
 
 // ── Teleport ─────────────────────────────────────────────────────────────────
@@ -189,7 +234,9 @@ document.querySelectorAll('.tile-btn').forEach(btn => {
 document.getElementById('btn-connect').addEventListener('click', async () => {
   const res = await api('POST', '/api/connect');
   if (res?.connected) {
+    isConnected = true;
     updateDeviceStatus(true, res.udid, res.ios_version);
+    updateUIState();
   }
 });
 
@@ -200,13 +247,14 @@ function connectWS() {
   ws.onmessage = (e) => {
     const msg = JSON.parse(e.data);
     if (msg.type === 'position') {
+      serverMode = msg.mode;
       updatePosition(msg.lat, msg.lng, msg.mode);
+      updateUIState();
     }
   };
 
   ws.onclose = () => setTimeout(connectWS, 2000);
 
-  // Expose WS for joystick key streaming
   window._ws = ws;
 }
 
@@ -225,8 +273,7 @@ function updatePosition(lat, lng, mode) {
   if (trailCoords.length > 500) trailCoords.shift();
   trailPolyline.setLatLngs(trailCoords);
 
-  const el = document.getElementById('status-pos');
-  el.textContent = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  document.getElementById('status-pos').textContent = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
   document.getElementById('status-mode').textContent = mode;
 }
 
@@ -241,25 +288,47 @@ function updateDeviceStatus(connected, udid, version) {
   }
 }
 
+// ── Step rate indicator ───────────────────────────────────────────────────────
+async function pollStepRate() {
+  const data = await api('GET', '/api/step-rate');
+  const el = document.getElementById('status-steps');
+  if (!el || !data) return;
+  if (data.active) {
+    el.textContent = `步數注入：${data.steps_per_minute} 步/分`;
+    el.className = 'steps-active';
+  } else {
+    el.textContent = '步數注入：未啟動';
+    el.className = 'steps-idle';
+  }
+}
+
 // ── Initial status poll ───────────────────────────────────────────────────────
 async function pollStatus() {
   const data = await api('GET', '/api/status');
-  if (data?.connected) {
-    updateDeviceStatus(true, data.udid, data.ios_version);
+  if (data) {
+    isConnected = data.connected ?? false;
+    serverMode = data.mode ?? 'idle';
+    updateDeviceStatus(isConnected, data.udid, data.ios_version);
     if (data.lat && data.lng) {
       updatePosition(data.lat, data.lng, data.mode);
       map.setView([data.lat, data.lng], 16);
     }
+    updateUIState();
   }
   speedInput.value = data?.speed_kmh ?? 3.5;
   speedLabel.textContent = `${(data?.speed_kmh ?? 3.5).toFixed(1)} km/h`;
 }
 
 pollStatus();
+pollStepRate();
+setInterval(pollStepRate, 5000);
 
 // ── Sub-module init ───────────────────────────────────────────────────────────
 initJoystick();
-const waypointPanel = initWaypointPanel(map, currentSpeed);
+const waypointPanel = initWaypointPanel(map, currentSpeed, (count) => {
+  waypointCount = count;
+  updateUIState();
+});
 
 // ── REST helper ───────────────────────────────────────────────────────────────
 async function api(method, path, body) {
