@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>myPikminGps</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- ── Map ───────────────────────────────────── -->
+    <div id="map"></div>
+
+    <!-- ── Control Panel ────────────────────────── -->
+    <aside id="panel">
+      <h1>🌱 myPikminGps</h1>
+
+      <!-- Status bar -->
+      <div id="status-bar">
+        <span id="status-mode">idle</span>
+        <span id="status-pos">—</span>
+        <span id="status-device" class="device-disconnected">裝置未連線</span>
+      </div>
+
+      <!-- Speed control -->
+      <section>
+        <label for="speed-input">速度
+          <span id="speed-label">3.5 km/h</span>
+        </label>
+        <input id="speed-input" type="range" min="0.5" max="5" step="0.1" value="3.5" />
+      </section>
+
+      <!-- Mode tabs -->
+      <div id="mode-tabs">
+        <button class="tab active" data-mode="navigate">導航</button>
+        <button class="tab" data-mode="route">多點路線</button>
+        <button class="tab" data-mode="joystick">搖桿</button>
+      </div>
+
+      <!-- Navigate panel -->
+      <div id="panel-navigate" class="mode-panel active">
+        <p class="hint">在地圖上點擊目的地，或直接輸入座標</p>
+        <div class="row">
+          <input id="nav-lat" type="number" step="any" placeholder="緯度" />
+          <input id="nav-lng" type="number" step="any" placeholder="經度" />
+        </div>
+        <button id="btn-navigate" class="btn-primary">開始走路</button>
+      </div>
+
+      <!-- Route panel -->
+      <div id="panel-route" class="mode-panel">
+        <p class="hint">Shift + 點擊地圖新增停留點</p>
+        <ul id="waypoint-list"></ul>
+        <div class="row">
+          <label class="check-label">
+            <input id="route-loop" type="checkbox" /> 循環
+          </label>
+          <input id="dwell-default" type="number" min="0" max="300" value="5" step="1" title="預設停留秒數" />
+          <span>秒</span>
+        </div>
+        <div class="row">
+          <button id="btn-route-start" class="btn-primary">開始路線</button>
+          <button id="btn-route-clear" class="btn-secondary">清除</button>
+        </div>
+      </div>
+
+      <!-- Joystick panel -->
+      <div id="panel-joystick" class="mode-panel">
+        <p class="hint">按下「啟動搖桿」後，用 WASD 或方向鍵移動</p>
+        <button id="btn-joystick-start" class="btn-primary">啟動搖桿</button>
+        <div id="dpad">
+          <button class="dpad-btn" data-key="ArrowUp">▲</button>
+          <div class="dpad-row">
+            <button class="dpad-btn" data-key="ArrowLeft">◀</button>
+            <button class="dpad-btn dpad-center" data-key="">·</button>
+            <button class="dpad-btn" data-key="ArrowRight">▶</button>
+          </div>
+          <button class="dpad-btn" data-key="ArrowDown">▼</button>
+        </div>
+      </div>
+
+      <!-- Stop -->
+      <button id="btn-stop" class="btn-danger">⏹ 停止</button>
+
+      <!-- Teleport shortcut -->
+      <details>
+        <summary>即時跳點 (Teleport)</summary>
+        <div class="row">
+          <input id="tp-lat" type="number" step="any" placeholder="緯度" />
+          <input id="tp-lng" type="number" step="any" placeholder="經度" />
+        </div>
+        <button id="btn-teleport" class="btn-secondary">跳點</button>
+      </details>
+
+      <!-- Connect -->
+      <details>
+        <summary>裝置連線</summary>
+        <p class="hint">先在另一個終端機執行：<br/><code>sudo pymobiledevice3 remote tunneld</code></p>
+        <button id="btn-connect" class="btn-secondary">重新連線</button>
+      </details>
+    </aside>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>
