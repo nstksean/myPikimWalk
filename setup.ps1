@@ -1,4 +1,4 @@
-# myPikimWalk — Windows 首次設定腳本
+﻿# myPikimWalk — Windows 首次設定腳本
 # 用法（以系統管理員身份執行 PowerShell）：
 #
 #   Set-ExecutionPolicy RemoteSigned -Scope CurrentUser   # 第一次要跑這行
@@ -67,22 +67,22 @@ if ($itunesStore -or $itunesDesktop -or $appleDevices) {
     Ok "iTunes 安裝確認"
 }
 
-# ── 5. Python 3.13 確認 ──────────────────────────────────────────────────────
-Info "確認 Python 3.13..."
+# ── 5. Python 3.12 確認 ──────────────────────────────────────────────────────
+Info "確認 Python 3.12..."
 
 $pythonExe = $null
 
 # 嘗試 py launcher（Windows 標準方式）
 try {
-    $ver = & py -3.13 --version 2>&1
-    if ($ver -match "3\.13") { $pythonExe = "py -3.13" }
+    $ver = & py -3.12 --version 2>&1
+    if ($ver -match "3\.12") { $pythonExe = "py -3.12" }
 } catch {}
 
-# 嘗試 python3.13
+# 嘗試 python3.12
 if (-not $pythonExe) {
     try {
-        $ver = & python3.13 --version 2>&1
-        if ($ver -match "3\.13") { $pythonExe = "python3.13" }
+        $ver = & python3.12 --version 2>&1
+        if ($ver -match "3\.12") { $pythonExe = "python3.12" }
     } catch {}
 }
 
@@ -90,26 +90,26 @@ if (-not $pythonExe) {
 if (-not $pythonExe) {
     try {
         $ver = & python --version 2>&1
-        if ($ver -match "3\.13") { $pythonExe = "python" }
+        if ($ver -match "3\.12") { $pythonExe = "python" }
     } catch {}
 }
 
 if (-not $pythonExe) {
-    Info "Python 3.13 未安裝，嘗試用 winget 安裝..."
+    Info "Python 3.12 未安裝，嘗試用 winget 安裝..."
     try {
-        winget install --id Python.Python.3.13 --accept-source-agreements --accept-package-agreements
+        winget install --id Python.Python.3.12 --accept-source-agreements --accept-package-agreements
         # 刷新 PATH
         $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" +
                     [System.Environment]::GetEnvironmentVariable("Path", "User")
-        $ver = & py -3.13 --version 2>&1
-        if ($ver -match "3\.13") { $pythonExe = "py -3.13" }
+        $ver = & py -3.12 --version 2>&1
+        if ($ver -match "3\.12") { $pythonExe = "py -3.12" }
     } catch {
-        Die "winget 安裝 Python 3.13 失敗。請手動從 https://python.org 下載安裝，再重新執行 .\setup.ps1"
+        Die "winget 安裝 Python 3.12 失敗。請手動從 https://python.org 下載安裝，再重新執行 .\setup.ps1"
     }
 }
 
 if (-not $pythonExe) {
-    Die "找不到 Python 3.13。請從 https://python.org/downloads 安裝，確認勾選 'Add Python to PATH'"
+    Die "找不到 Python 3.12。請從 https://python.org/downloads 安裝，確認勾選 'Add Python to PATH'"
 }
 
 $verStr = Invoke-Expression "$pythonExe --version"
@@ -202,3 +202,4 @@ Write-Host ""
 Write-Host "   腳本會自動啟動服務並開啟瀏覽器 http://127.0.0.1:8000"
 Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Green
 Write-Host ""
+

@@ -65,6 +65,7 @@ class SimulationEngine:
             self._lat, self._lng = lat, lng
             self._mode = Mode.idle
         await self._push_position()
+        await self._device.set_location(lat, lng)
 
     async def navigate(self, dest_lat: float, dest_lng: float, speed_kmh: float | None = None) -> None:
         if speed_kmh is not None:
