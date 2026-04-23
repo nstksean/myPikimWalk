@@ -66,7 +66,7 @@
 
 | 限制 | 說明 | 可能的解法 |
 |---|---|---|
-| 只支援 macOS | pymobiledevice3 在 Linux 上也能跑，但未測試；Windows 需要 WSL | 在 Linux 上測試並更新 README |
+| Linux 未測試 | pymobiledevice3 在 Linux 上架構上可行，但未驗證 | 在 Linux 測試並更新 README / 補 setup-linux.sh |
 | 需要常駐 sudo | tunneld 需要 root；無法做成完全無 sudo 的 App | macOS Launch Daemon（設定一次後自動啟動）|
 | iOS 16 及以下未測試 | 使用 DVT `LocationSimulation`，舊版 iOS 用 `DtSimulateLocation`，pymobiledevice3 有支援但本專案沒測試 | 在舊裝置測試並加相容處理 |
 | OSRM 公共 server 可能降速 | `router.project-osrm.org` 是免費資源，大流量時會慢 | 自架 OSRM Docker |

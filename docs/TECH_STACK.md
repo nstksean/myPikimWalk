@@ -42,11 +42,18 @@ GET https://router.project-osrm.org/route/v1/foot/{lng1},{lat1};{lng2},{lat2}?ov
 
 ## 系統依賴
 
+**Mac**
 ```bash
-brew install libimobiledevice   # idevice_id 等 USB 工具
+brew install libimobiledevice   # 提供 idevice_id 等 USB 工具
 ```
 
 `libimobiledevice` 提供 `idevice_id -l` 列出 iPhone，是 pymobiledevice3 USB 連線的基礎工具鏈。
+
+**Windows**
+
+需要 **iTunes（Microsoft Store 版）**，它會自動安裝 Apple Mobile Device USB Driver 和 Apple Mobile Device Service。不需要 `libimobiledevice`；裝置偵測改用 `pymobiledevice3 usbmux list`。
+
+> 注意：請安裝 **Microsoft Store 版** iTunes，官網舊版 driver 相容性較差。
 
 ---
 

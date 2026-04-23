@@ -1,8 +1,13 @@
 # IOS_SETUP.md — iPhone 首次設定指南
 
-**首選方式**：執行 `./setup.sh`，它會自動引導你完成所有步驟。
+**首選方式**：執行設定腳本，它會自動引導你完成所有步驟。
 
-本文件是 `setup.sh` 的詳細說明，以及當 `setup.sh` 失敗時的手動 fallback 流程。
+| 系統 | 腳本 |
+|---|---|
+| Mac | `./setup.sh` |
+| Windows（管理員 PowerShell）| `.\setup.ps1` |
+
+本文件是設定腳本的詳細說明，以及腳本失敗時的手動 fallback 流程。
 
 ---
 
@@ -10,18 +15,24 @@
 
 iPhone 上的 GPS 模擬需要以下三件事：
 
-1. **信任此電腦**：iPhone 和 Mac 之間的 USB 信任
+1. **信任此電腦**：iPhone 和電腦之間的 USB 信任
 2. **Developer Mode**：iOS 17+ 的開發者模式開關
 3. **DDI 掛載**：Developer Disk Image（現代版由 pymobiledevice3 自動處理）
 
-只需要在**第一次設定時**做，之後每次只要 `sudo ./start.sh`。
+只需要在**第一次設定時**做，之後每次只要啟動腳本。
 
 ---
 
-## 自動設定：setup.sh（推薦）
+## 自動設定（推薦）
 
+**Mac**
 ```bash
 ./setup.sh
+```
+
+**Windows（管理員 PowerShell）**
+```powershell
+.\setup.ps1
 ```
 
 腳本會自動完成：環境安裝 → 裝置偵測 → Developer Mode 啟用 → 驗證
@@ -30,19 +41,27 @@ iPhone 上的 GPS 模擬需要以下三件事：
 
 ---
 
-## 手動設定流程（setup.sh 失敗時的 fallback）
+## 手動設定流程（腳本失敗時的 fallback）
 
 ### 步驟 1：USB 信任
 
 1. 解鎖 iPhone 螢幕
-2. 用 **資料傳輸線**（非純充電線）連接到 Mac
+2. 用 **資料傳輸線**（非純充電線）連接到電腦
 3. iPhone 螢幕彈出「是否信任此電腦？」→ 點**信任**
 4. 輸入 iPhone 密碼確認
 
 驗證：
+
 ```bash
+# Mac
 idevice_id -l
 # 應該輸出 UDID，例如：00008140-000A6C8A0A98801C
+```
+
+```powershell
+# Windows
+.venv\Scripts\python.exe -m pymobiledevice3 usbmux list
+# 應該輸出包含 identifier 的裝置資訊
 ```
 
 ---
@@ -52,8 +71,13 @@ idevice_id -l
 **重要**：iPhone 螢幕必須已解鎖（回到主畫面），不能在鎖定狀態。
 
 ```bash
-source .venv/bin/activate
-sudo pymobiledevice3 amfi enable-developer-mode
+# Mac
+sudo .venv/bin/pymobiledevice3 amfi enable-developer-mode
+```
+
+```powershell
+# Windows（管理員 PowerShell）
+.venv\Scripts\python.exe -m pymobiledevice3 amfi enable-developer-mode
 ```
 
 常見結果：
@@ -78,9 +102,16 @@ iPhone 重啟後，螢幕上方會出現橫幅提示「Ready to Enable Developer
 ### 步驟 4：驗證設定完成
 
 ```bash
-sudo pymobiledevice3 amfi developer-mode-status
-# 應該輸出：developer mode is enabled
+# Mac
+sudo .venv/bin/pymobiledevice3 amfi developer-mode-status
 ```
+
+```powershell
+# Windows
+.venv\Scripts\python.exe -m pymobiledevice3 amfi developer-mode-status
+```
+
+兩者都應該輸出：`developer mode is enabled`
 
 ---
 

@@ -58,14 +58,24 @@ storage:
 
 ## 怎麼跑起來（開發用）
 
+**Mac**
 ```bash
 # 終端機 1：啟動 iOS tunnel（需要常駐）
 sudo .venv/bin/pymobiledevice3 remote tunneld
 
 # 終端機 2：啟動伺服器
-source .venv/bin/activate
 sudo .venv/bin/python -m backend.main
 # 或：sudo ./start.sh（一鍵，會自動開瀏覽器）
+```
+
+**Windows（以系統管理員 PowerShell 執行）**
+```powershell
+# 終端機 1：啟動 iOS tunnel（需要常駐）
+.venv\Scripts\python.exe -m pymobiledevice3 remote tunneld
+
+# 終端機 2：啟動伺服器
+.venv\Scripts\python.exe -m backend.main
+# 或：.\start.ps1（一鍵，會自動開瀏覽器）
 ```
 
 伺服器在 `http://127.0.0.1:8000`

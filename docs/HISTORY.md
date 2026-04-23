@@ -154,6 +154,25 @@ git push -u origin main
 
 ---
 
+## Phase 9：Windows 支援
+
+使用者問：「這個有辦法讓 Windows 也能用嗎？」
+
+**調研結果**：
+- `pymobiledevice3` 官方支援 Windows（2024 年初加入）
+- Windows 上用 iTunes（Microsoft Store 版）替代 `libimobiledevice`
+- `tunneld` 在 Windows 管理員 PowerShell 可正常執行
+- WSL2 + usbipd-win 對 iPhone USB 有已知問題，**不建議**
+
+**實作**：
+- 新增 `setup.ps1`：Windows 版首次設定腳本（對應 `setup.sh`）
+- 新增 `start.ps1`：Windows 版每日啟動腳本（對應 `start.sh`）
+- 後端 Python 程式碼**零修改**（跨平台）
+- 更新 README 加 Windows 安裝/啟動說明
+- 更新 `docs/TROUBLESHOOTING.md` 加 Windows 專屬問題
+
+---
+
 ## 時間軸摘要
 
 | 階段 | 主要產出 |
@@ -165,3 +184,4 @@ git push -u origin main
 | Phase 6 | CartoDB tiles、Pikmin SVG、start.sh |
 | Phase 7 | git push 上 GitHub |
 | Phase 8 | docs/ + setup.sh + README 更新 |
+| Phase 9 | Windows 支援：setup.ps1 + start.ps1 |
