@@ -2,6 +2,62 @@
 
 ---
 
+## Windows 專屬問題
+
+### PowerShell 說「無法載入腳本，因為這個系統已停用指令碼執行」
+
+**原因**：Windows 預設封鎖執行 `.ps1` 腳本。
+
+**解法**：以系統管理員身份執行一次：
+```powershell
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+之後 `.\setup.ps1` 和 `.\start.ps1` 就能正常執行。
+
+---
+
+### `setup.ps1` / `start.ps1` 找不到 iPhone（Windows）
+
+**步驟檢查**：
+1. iTunes 必須是 **Microsoft Store 版**（不是官網下載的舊版），舊版 driver 有相容問題
+2. iPhone 插上後，Windows 裝置管理員應該看到「Apple Mobile Device USB Driver」
+3. 確認 iPhone 上有點「信任此電腦」
+4. iTunes 打開後能看到 iPhone 才算連線正常
+
+---
+
+### `pymobiledevice3 usbmux list` 輸出是空的（Windows）
+
+**原因**：Apple Mobile Device Service 未啟動。
+
+**解法**：
+```powershell
+# 以系統管理員身份執行
+Start-Service "Apple Mobile Device Service"
+```
+或在「服務」（services.msc）裡找到 "Apple Mobile Device Service"，右鍵 → 啟動。
+
+---
+
+### Windows 的 `tunneld` 啟動後馬上關閉
+
+**可能原因**：
+1. 不是以系統管理員執行 → 右鍵 PowerShell → 以系統管理員身份執行
+2. iPhone 還沒 trust 這台電腦 → 拔插 USB，在 iPhone 上點信任
+
+---
+
+### `start.ps1` 關閉後 tunneld 還在背景跑
+
+```powershell
+# 手動清理
+Get-Process python | Where-Object { $_.MainWindowTitle -match "tunneld" } | Stop-Process
+# 或直接停全部 python 程序（確認沒有其他 Python App 在跑）
+Get-Process python | Stop-Process
+```
+
+---
+
 ## 安裝 / 設定問題
 
 ### `Cannot enable developer-mode when passcode is set`
