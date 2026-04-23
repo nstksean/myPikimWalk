@@ -1,4 +1,4 @@
-# myPikimWalk — Windows 啟動腳本
+﻿# myPikimWalk — Windows 啟動腳本
 # 用法（以系統管理員身份執行 PowerShell）：
 #   .\start.ps1
 #
@@ -69,3 +69,4 @@ try {
     Write-Host "🛑 已關閉所有服務" -ForegroundColor Red
     Write-Host ""
 }
+
